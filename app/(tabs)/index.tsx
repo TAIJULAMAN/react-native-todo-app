@@ -1,11 +1,13 @@
 import { createHomeStyles } from "@/assets/styles/home.styles";
-import Header from "@/components/Header";
 import { useTheme } from "@/hooks/useTheme";
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link } from "expo-router";
 import React from "react";
 import { StatusBar, Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+
+import Header from "@/components/Header";
+import TodoInput from "@/components/TodoInput";
 
 
 export default function Index() {
@@ -22,6 +24,7 @@ export default function Index() {
         style={homeStyles.safeArea}
       >
         <Header />
+        <TodoInput />
         <TouchableOpacity
           onPress={toggleDarkMode}
         >
