@@ -10,7 +10,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "convex/react";
 import { LinearGradient } from "expo-linear-gradient";
 import { useState } from "react";
-import { Alert, FlatList, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { Alert, FlatList, Modal, StatusBar, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 type Todo = Doc<"todos">;
@@ -20,6 +20,8 @@ export default function Index() {
 
   const [editingId, setEditingId] = useState<Id<"todos"> | null>(null);
   const [editText, setEditText] = useState("");
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [idToDelete, setIdToDelete] = useState<Id<"todos"> | null>(null);
 
   const homeStyles = createHomeStyles(colors);
 
@@ -41,11 +43,28 @@ export default function Index() {
     }
   };
 
-  const handleDeleteTodo = async (id: Id<"todos">) => {
-    Alert.alert("Delete Todo", "Are you sure you want to delete this todo?", [
-      { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => deleteTodo({ id }) },
-    ]);
+  const handleDeleteTodo = (id: Id<"todos">) => {
+    // open our cross-platform modal so it works reliably across platforms (web / native)
+    setIdToDelete(id);
+    setDeleteModalVisible(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!idToDelete) return;
+    try {
+      await deleteTodo({ id: idToDelete });
+    } catch (error) {
+      console.log("Error deleting todo", error);
+      Alert.alert("Error", "Failed to delete todo");
+    } finally {
+      setDeleteModalVisible(false);
+      setIdToDelete(null);
+    }
+  };
+
+  const cancelDelete = () => {
+    setDeleteModalVisible(false);
+    setIdToDelete(null);
   };
 
   const handleEditTodo = (todo: Todo) => {
@@ -175,6 +194,35 @@ export default function Index() {
           ListEmptyComponent={<EmptyState />}
           showsVerticalScrollIndicator={false}
         />
+
+        {/* Delete confirmation modal (cross-platform) */}
+        <Modal
+          visible={deleteModalVisible}
+          transparent
+          animationType="fade"
+          onRequestClose={cancelDelete}
+        >
+          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center", padding: 20 }}>
+            <View style={{ width: "100%", maxWidth: 420, backgroundColor: colors.gradients.surface[0] ?? colors.gradients.background[0], borderRadius: 12, padding: 18 }}>
+              <Text style={{ fontSize: 16, fontWeight: "600", color: colors.text }}>Delete Todo</Text>
+              <Text style={{ marginTop: 8, color: colors.textMuted }}>Are you sure you want to delete this todo?</Text>
+
+              <View style={{ flexDirection: "row", justifyContent: "flex-end", marginTop: 16 }}>
+                <TouchableOpacity onPress={cancelDelete} style={{ marginRight: 8 }} activeOpacity={0.8}>
+                  <LinearGradient colors={colors.gradients.muted} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}>
+                    <Text style={{ color: colors.text }}>Cancel</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={confirmDelete} activeOpacity={0.8}>
+                  <LinearGradient colors={colors.gradients.danger} style={{ paddingVertical: 8, paddingHorizontal: 12, borderRadius: 8 }}>
+                    <Text style={{ color: "#fff" }}>Delete</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </LinearGradient>
   );
