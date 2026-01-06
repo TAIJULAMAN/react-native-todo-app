@@ -2,7 +2,9 @@ import { ThemeProvider } from "@/hooks/useTheme";
 import { ConvexProvider, ConvexReactClient } from "convex/react";
 import { Stack } from "expo-router";
 
-const convex = new ConvexReactClient(process.env.EXPO_PUBLIC_CONVEX_URL!, {
+const convexUrl = process.env.EXPO_PUBLIC_CONVEX_URL || "http://127.0.0.1:3210";
+
+const convex = new ConvexReactClient(convexUrl, {
   unsavedChangesWarning: false,
 });
 
